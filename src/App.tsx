@@ -1,35 +1,84 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+import { useState } from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [showInput, setShowInput] = useState(false);
+  const [task, setTask] = useState("");
+  const [tasks, setTasks] = useState<string[]>([]);
+
+  const addTask = () => {
+    setShowInput(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTask(e.target.value);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && task.trim()) {
+      setTasks([...tasks, task]);
+      setTask("");
+      setShowInput(false);
+    } else if (e.key === "Escape") {
+      setShowInput(false);
+    }
+  };
+
+  const deleteTask = (index: number) => {
+    setTasks(tasks.filter((_, i) => i !== index));
+  };
 
   return (
     <>
+      <h1>Todo-List</h1>
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <button onClick={addTask}>Add Task</button>
+        {showInput && (
+          <div>
+            <input
+              type="text"
+              value={task}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyPress}
+              style={{ margin: "1rem", padding: "0.2rem" }}
+              autoFocus
+            />
+          </div>
+        )}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div>
+        <h2>Your Tasks:</h2>
+        <div>
+          {tasks.length === 0 ? (
+            <div>No tasks</div>
+          ) : (
+            tasks.map((task, index) => (
+              <li key={index}>
+                <span
+                  style={{
+                    border: "0.2rem solid grey",
+                    padding: "0.5rem",
+                    borderRadius: "0.5rem",
+                  }}
+                >
+                  {task}
+                </span>
+                <button
+                  onClick={() => deleteTask(index)}
+                  style={{
+                    marginLeft: "1rem",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  ❌
+                </button>
+              </li>
+            ))
+          )}
+        </div>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
