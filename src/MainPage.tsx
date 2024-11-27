@@ -2,7 +2,7 @@ import "./App.css";
 import EditIcon from "./UI/Icons/EditIcon";
 import TrashIcon from "./UI/Icons/TrashIcon";
 import CheckIcon from "./UI/Icons/CheckIcon";
-import CheckboxIcon from "./UI/Icons/CheckBoxIcon";
+import CheckboxIcon from "./UI/Icons/CheckboxIcon";
 import PlusIcon from "./UI/Icons/PlusIcon";
 import iconStyle from "./UI/Icons/style";
 import { useState } from "react";
