@@ -1,33 +1,34 @@
 import "./App.css";
-import { useState } from "react";
 import EditIcon from "./UI/Icons/EditIcon";
 import TrashIcon from "./UI/Icons/TrashIcon";
 import CheckIcon from "./UI/Icons/CheckIcon";
+import CheckboxIcon from "./UI/Icons/CheckBoxIcon";
+import PlusIcon from "./UI/Icons/PlusIcon";
 import iconStyle from "./UI/Icons/style";
+import { useState } from "react";
 
-function App() {
-  const [showInput, setShowInput] = useState(false);
+function MainPage() {
   const [task, setTask] = useState("");
-  const [tasks, setTasks] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<{ text: string; done: boolean }[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedTask, setEditedTask] = useState<string>("");
 
-  const addTask = () => {
-    setShowInput(true);
+  const addTask = (
+    event:
+      | React.KeyboardEvent<HTMLInputElement>
+      | React.MouseEvent<HTMLButtonElement>
+  ) => {
+    if ("key" in event && event.key !== "Enter") {
+      return;
+    }
+    if (task.trim()) {
+      setTasks([...tasks, { text: task, done: false }]);
+      setTask("");
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTask(e.target.value);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && task.trim()) {
-      setTasks([...tasks, task]);
-      setTask("");
-      setShowInput(false);
-    } else if (e.key === "Escape") {
-      setShowInput(false);
-    }
   };
 
   const deleteTask = (index: number) => {
@@ -36,7 +37,7 @@ function App() {
 
   const startEditing = (index: number) => {
     setEditingIndex(index);
-    setEditedTask(tasks[index]);
+    setEditedTask(tasks[index].text);
   };
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,14 +47,23 @@ function App() {
   const saveEdit = () => {
     if (editedTask.trim()) {
       const updatedTasks = [...tasks];
-      updatedTasks[editingIndex!] = editedTask;
+      updatedTasks[editingIndex!] = {
+        ...updatedTasks[editingIndex!],
+        text: editedTask,
+      };
       setTasks(updatedTasks);
       setEditingIndex(null);
       setEditedTask("");
     }
   };
 
-  const boxStyle = {
+  const toggleTaskDone = (index: number) => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index].done = !updatedTasks[index].done;
+    setTasks(updatedTasks);
+  };
+
+  const borderStyle = {
     display: "flex",
     alignItems: "center",
     border: "0.1rem solid grey",
@@ -61,33 +71,32 @@ function App() {
     borderRadius: "0.5rem",
     marginBottom: "0.5rem",
     justifyContent: "space-between",
-    width: "100%",
   };
 
   return (
     <>
       <h1>Todo-List</h1>
-      {!showInput && <button onClick={addTask}>Add Task</button>}
-      {showInput && (
-        <input
-          type="text"
-          value={task}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyPress}
-          style={{
-            marginBottom: "1rem",
-            padding: "0.2rem 0.6rem",
-          }}
-          autoFocus
-          placeholder="Type here..."
-        />
-      )}
-      <h2>Your Tasks:</h2>
+      <input
+        type="text"
+        value={task}
+        onChange={handleInputChange}
+        onKeyDown={addTask}
+        style={{
+          padding: "0.2rem 0.6rem",
+          borderRadius: "0.2rem",
+          marginBottom: "2rem",
+        }}
+        autoFocus
+        placeholder="Write a task..."
+      />
+      <button style={iconStyle} onClick={addTask}>
+        <PlusIcon />
+      </button>
       {tasks.length === 0 ? (
         <p>No tasks</p>
       ) : (
-        tasks.map((task, index) => (
-          <div key={index} style={boxStyle}>
+        tasks.map((taskItem, index) => (
+          <div key={index} style={borderStyle}>
             {editingIndex === index ? (
               <input
                 type="text"
@@ -97,15 +106,27 @@ function App() {
                   if (e.key === "Enter") saveEdit();
                   else if (e.key === "Escape") setEditingIndex(null);
                 }}
-                style={{ padding: "0.2rem 0.6rem" }}
+                style={{ padding: "0.2rem 0.6rem", borderRadius: "0.2rem" }}
                 autoFocus
               />
             ) : (
-              task
+              <span
+                style={{
+                  textDecoration: taskItem.done ? "line-through" : "none",
+                }}
+              >
+                {taskItem.text}
+              </span>
             )}
             <div>
               {editingIndex !== index && (
                 <>
+                  <button
+                    onClick={() => toggleTaskDone(index)}
+                    style={iconStyle}
+                  >
+                    <CheckboxIcon />
+                  </button>
                   <button onClick={() => startEditing(index)} style={iconStyle}>
                     <EditIcon />
                   </button>
@@ -127,4 +148,4 @@ function App() {
   );
 }
 
-export default App;
+export default MainPage;
