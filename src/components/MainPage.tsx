@@ -1,15 +1,18 @@
-import "./App.css";
-import EditIcon from "./UI/Icons/EditIcon";
-import TrashIcon from "./UI/Icons/TrashIcon";
-import CheckIcon from "./UI/Icons/CheckIcon";
-import CheckboxIcon from "./UI/Icons/CheckboxIcon";
-import PlusIcon from "./UI/Icons/PlusIcon";
-import iconStyle from "./UI/Icons/style";
+import "../App.css";
+import {
+  EditIcon,
+  TrashIcon,
+  CheckIcon,
+  CheckboxIcon,
+  PlusIcon,
+  iconStyle,
+} from "./Ui";
+import useLocalStorage from "../hooks/useLocalStorage";
 import { useState } from "react";
 
 function MainPage() {
   const [task, setTask] = useState("");
-  const [tasks, setTasks] = useState<{ text: string; done: boolean }[]>([]);
+  const [tasks, setTasks] = useLocalStorage();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedTask, setEditedTask] = useState<string>("");
 
@@ -22,7 +25,9 @@ function MainPage() {
       return;
     }
     if (task.trim()) {
-      setTasks([...tasks, { text: task, done: false }]);
+      const newTask = { text: task, done: false };
+      const updatedTasks = [...tasks, newTask];
+      setTasks(updatedTasks);
       setTask("");
     }
   };
@@ -32,7 +37,8 @@ function MainPage() {
   };
 
   const deleteTask = (index: number) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+    const updatedTasks = tasks.filter((_, i) => i !== index);
+    setTasks(updatedTasks);
   };
 
   const startEditing = (index: number) => {
@@ -63,7 +69,7 @@ function MainPage() {
     setTasks(updatedTasks);
   };
 
-  const borderStyle = {
+  const taskContainer = {
     display: "flex",
     alignItems: "center",
     border: "0.1rem solid grey",
@@ -96,7 +102,7 @@ function MainPage() {
         <p>No tasks</p>
       ) : (
         tasks.map((taskItem, index) => (
-          <div key={index} style={borderStyle}>
+          <div key={index} style={taskContainer}>
             {editingIndex === index ? (
               <input
                 type="text"
