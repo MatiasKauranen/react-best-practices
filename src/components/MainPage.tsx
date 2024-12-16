@@ -1,3 +1,4 @@
+import React, { useState, useCallback, useMemo } from "react";
 import "../App.css";
 import {
   EditIcon,
@@ -8,7 +9,71 @@ import {
   iconStyle,
 } from "./Ui";
 import useLocalStorage from "../hooks/useLocalStorage";
-import { useState } from "react";
+
+const TaskItem = React.memo(({ taskItem, index, editingIndex, handlers }) => {
+  const {
+    toggleTaskDone,
+    startEditing,
+    deleteTask,
+    saveEdit,
+    handleEditChange,
+  } = handlers;
+
+  const taskContainer = {
+    display: "flex",
+    alignItems: "center",
+    border: "0.1rem solid grey",
+    padding: "0.5rem 0.5rem",
+    borderRadius: "0.5rem",
+    marginBottom: "0.5rem",
+    justifyContent: "space-between",
+  };
+
+  return (
+    <div key={index} style={taskContainer}>
+      {editingIndex === index ? (
+        <input
+          type="text"
+          value={taskItem.editedTask}
+          onChange={handleEditChange}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") saveEdit();
+            else if (e.key === "Escape") handlers.cancelEdit();
+          }}
+          style={{ padding: "0.2rem 0.6rem", borderRadius: "0.2rem" }}
+          autoFocus
+        />
+      ) : (
+        <span
+          style={{
+            textDecoration: taskItem.done ? "line-through" : "none",
+          }}
+        >
+          {taskItem.text}
+        </span>
+      )}
+      <div>
+        {editingIndex !== index ? (
+          <>
+            <button onClick={() => toggleTaskDone(index)} style={iconStyle}>
+              <CheckboxIcon />
+            </button>
+            <button onClick={() => startEditing(index)} style={iconStyle}>
+              <EditIcon />
+            </button>
+            <button onClick={() => deleteTask(index)} style={iconStyle}>
+              <TrashIcon />
+            </button>
+          </>
+        ) : (
+          <button onClick={saveEdit} style={iconStyle}>
+            <CheckIcon />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+});
 
 function MainPage() {
   const [task, setTask] = useState("");
@@ -16,30 +81,40 @@ function MainPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedTask, setEditedTask] = useState<string>("");
 
-  const addTask = (
-    event:
-      | React.KeyboardEvent<HTMLInputElement>
-      | React.MouseEvent<HTMLButtonElement>
-  ) => {
-    if ("key" in event && event.key !== "Enter") {
-      return;
-    }
-    if (task.trim()) {
-      const newTask = { text: task, done: false };
-      const updatedTasks = [...tasks, newTask];
+  const addTask = useCallback(
+    (
+      event:
+        | React.KeyboardEvent<HTMLInputElement>
+        | React.MouseEvent<HTMLButtonElement>
+    ) => {
+      if ("key" in event && event.key !== "Enter") return;
+
+      if (task.trim()) {
+        const newTask = { text: task, done: false };
+        const updatedTasks = [...tasks, newTask];
+        setTasks(updatedTasks);
+        setTask("");
+      }
+    },
+    [task, tasks, setTasks]
+  );
+
+  const deleteTask = useCallback(
+    (index: number) => {
+      const updatedTasks = tasks.filter((_, i) => i !== index);
       setTasks(updatedTasks);
-      setTask("");
-    }
-  };
+    },
+    [tasks, setTasks]
+  );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTask(e.target.value);
-  };
-
-  const deleteTask = (index: number) => {
-    const updatedTasks = tasks.filter((_, i) => i !== index);
-    setTasks(updatedTasks);
-  };
+  const toggleTaskDone = useCallback(
+    (index: number) => {
+      const updatedTasks = [...tasks];
+      updatedTasks[index].done = !updatedTasks[index].done;
+      setTasks(updatedTasks);
+    },
+    [tasks, setTasks]
+  );
 
   const startEditing = (index: number) => {
     setEditingIndex(index);
@@ -63,21 +138,9 @@ function MainPage() {
     }
   };
 
-  const toggleTaskDone = (index: number) => {
-    const updatedTasks = [...tasks];
-    updatedTasks[index].done = !updatedTasks[index].done;
-    setTasks(updatedTasks);
-  };
-
-  const taskContainer = {
-    display: "flex",
-    alignItems: "center",
-    border: "0.1rem solid grey",
-    padding: "0.5rem 0.5rem",
-    borderRadius: "0.5rem",
-    marginBottom: "0.5rem",
-    justifyContent: "space-between",
-  };
+  const completedTaskCount = useMemo(() => {
+    return tasks.filter((task) => task.done).length;
+  }, [tasks]);
 
   return (
     <>
@@ -85,7 +148,7 @@ function MainPage() {
       <input
         type="text"
         value={task}
-        onChange={handleInputChange}
+        onChange={(e) => setTask(e.target.value)}
         onKeyDown={addTask}
         style={{
           padding: "0.2rem 0.6rem",
@@ -98,56 +161,25 @@ function MainPage() {
       <button style={iconStyle} onClick={addTask}>
         <PlusIcon />
       </button>
+      <p>Completed Tasks: {completedTaskCount}</p>
       {tasks.length === 0 ? (
         <p>No tasks</p>
       ) : (
         tasks.map((taskItem, index) => (
-          <div key={index} style={taskContainer}>
-            {editingIndex === index ? (
-              <input
-                type="text"
-                value={editedTask}
-                onChange={handleEditChange}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") saveEdit();
-                  else if (e.key === "Escape") setEditingIndex(null);
-                }}
-                style={{ padding: "0.2rem 0.6rem", borderRadius: "0.2rem" }}
-                autoFocus
-              />
-            ) : (
-              <span
-                style={{
-                  textDecoration: taskItem.done ? "line-through" : "none",
-                }}
-              >
-                {taskItem.text}
-              </span>
-            )}
-            <div>
-              {editingIndex !== index && (
-                <>
-                  <button
-                    onClick={() => toggleTaskDone(index)}
-                    style={iconStyle}
-                  >
-                    <CheckboxIcon />
-                  </button>
-                  <button onClick={() => startEditing(index)} style={iconStyle}>
-                    <EditIcon />
-                  </button>
-                  <button onClick={() => deleteTask(index)} style={iconStyle}>
-                    <TrashIcon />
-                  </button>
-                </>
-              )}
-              {editingIndex === index && (
-                <button onClick={saveEdit} style={iconStyle}>
-                  <CheckIcon />
-                </button>
-              )}
-            </div>
-          </div>
+          <TaskItem
+            key={index}
+            taskItem={{ ...taskItem, editedTask }}
+            index={index}
+            editingIndex={editingIndex}
+            handlers={{
+              toggleTaskDone,
+              startEditing,
+              deleteTask,
+              saveEdit,
+              handleEditChange,
+              cancelEdit: () => setEditingIndex(null),
+            }}
+          />
         ))
       )}
     </>
