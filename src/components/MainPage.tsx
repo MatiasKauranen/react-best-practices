@@ -9,71 +9,103 @@ import {
   iconStyle,
 } from "./Ui";
 import useLocalStorage from "../hooks/useLocalStorage";
+import { ErrorBoundary } from "react-error-boundary";
 
-const TaskItem = React.memo(({ taskItem, index, editingIndex, handlers }) => {
-  const {
-    toggleTaskDone,
-    startEditing,
-    deleteTask,
-    saveEdit,
-    handleEditChange,
-  } = handlers;
-
-  const taskContainer = {
-    display: "flex",
-    alignItems: "center",
-    border: "0.1rem solid grey",
-    padding: "0.5rem 0.5rem",
-    borderRadius: "0.5rem",
-    marginBottom: "0.5rem",
-    justifyContent: "space-between",
+interface TaskItemProps {
+  taskItem: {
+    text: string;
+    done: boolean;
+    editedTask: string;
   };
+  index: number;
+  editingIndex: number | null;
+  handlers: {
+    toggleTaskDone: (index: number) => void;
+    startEditing: (index: number) => void;
+    deleteTask: (index: number) => void;
+    saveEdit: () => void;
+    handleEditChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    cancelEdit: () => void;
+  };
+}
 
-  return (
-    <div key={index} style={taskContainer}>
-      {editingIndex === index ? (
-        <input
-          type="text"
-          value={taskItem.editedTask}
-          onChange={handleEditChange}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") saveEdit();
-            else if (e.key === "Escape") handlers.cancelEdit();
-          }}
-          style={{ padding: "0.2rem 0.6rem", borderRadius: "0.2rem" }}
-          autoFocus
-        />
-      ) : (
-        <span
-          style={{
-            textDecoration: taskItem.done ? "line-through" : "none",
-          }}
-        >
-          {taskItem.text}
-        </span>
-      )}
-      <div>
-        {editingIndex !== index ? (
-          <>
-            <button onClick={() => toggleTaskDone(index)} style={iconStyle}>
-              <CheckboxIcon />
-            </button>
-            <button onClick={() => startEditing(index)} style={iconStyle}>
-              <EditIcon />
-            </button>
-            <button onClick={() => deleteTask(index)} style={iconStyle}>
-              <TrashIcon />
-            </button>
-          </>
-        ) : (
-          <button onClick={saveEdit} style={iconStyle}>
-            <CheckIcon />
-          </button>
-        )}
-      </div>
+<ErrorBoundary
+  fallback={
+    <div>
+      <p>Something went wrong</p>
+      <button onClick={() => window.location.reload()}>Reload</button>
     </div>
-  );
-});
+  }
+>
+  <MainPage />
+</ErrorBoundary>;
+
+const TaskItem = React.memo(
+  ({ taskItem, index, editingIndex, handlers }: TaskItemProps) => {
+    const {
+      toggleTaskDone,
+      startEditing,
+      deleteTask,
+      saveEdit,
+      handleEditChange,
+    } = handlers;
+
+    const taskContainer = {
+      display: "flex",
+      alignItems: "center",
+      border: "0.1rem solid grey",
+      padding: "0.5rem 0.5rem",
+      borderRadius: "0.5rem",
+      marginBottom: "0.5rem",
+      justifyContent: "space-between",
+    };
+
+    return (
+      <div key={index} style={taskContainer}>
+        {editingIndex === index ? (
+          <input
+            type="text"
+            value={taskItem.editedTask}
+            onChange={handleEditChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveEdit();
+              else if (e.key === "Escape") handlers.cancelEdit();
+            }}
+            style={{ padding: "0.2rem 0.6rem", borderRadius: "0.2rem" }}
+            autoFocus
+          />
+        ) : (
+          <span
+            style={{
+              textDecoration: taskItem.done ? "line-through" : "none",
+            }}
+          >
+            {taskItem.text}
+          </span>
+        )}
+        <div>
+          {editingIndex !== index ? (
+            <>
+              <button onClick={() => toggleTaskDone(index)} style={iconStyle}>
+                <CheckboxIcon />
+              </button>
+              <button onClick={() => startEditing(index)} style={iconStyle}>
+                <EditIcon />
+              </button>
+              <button onClick={() => deleteTask(index)} style={iconStyle}>
+                <TrashIcon />
+              </button>
+            </>
+          ) : (
+            <button onClick={saveEdit} style={iconStyle}>
+              <CheckIcon />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+);
 
 function MainPage() {
   const [task, setTask] = useState("");
