@@ -1,8 +1,10 @@
 import "../App.css";
 import { PlusIcon, iconStyle } from "./Ui";
-import TaskItem from "./TaskItem";
 import useTaskHandlers from "../hooks/useTaskHandlers";
 import { ErrorBoundary } from "react-error-boundary";
+import { lazy, Suspense } from "react";
+
+const TaskItem = lazy(() => import("./TaskItem"));
 
 <ErrorBoundary
   fallback={
@@ -48,30 +50,32 @@ function MainPage() {
         autoFocus
         placeholder="Write a task..."
       />
-      <button style={iconStyle} onClick={addTask}>
-        <PlusIcon />
-      </button>
-      <h3>Completed Tasks: {completedTaskCount}</h3>
-      {tasks.length === 0 ? (
-        <p>No tasks</p>
-      ) : (
-        tasks.map((taskItem, index) => (
-          <TaskItem
-            key={index}
-            taskItem={{ ...taskItem, editedTask }}
-            index={index}
-            editingIndex={editingIndex}
-            handlers={{
-              toggleTaskDone,
-              startEditing,
-              deleteTask,
-              saveEdit,
-              handleEditChange,
-              cancelEdit,
-            }}
-          />
-        ))
-      )}
+      <Suspense fallback={<div>Loading...</div>}>
+        <button style={iconStyle} onClick={addTask}>
+          <PlusIcon />
+        </button>
+        <h3>Completed Tasks: {completedTaskCount}</h3>
+        {tasks.length === 0 ? (
+          <p>No tasks</p>
+        ) : (
+          tasks.map((taskItem, index) => (
+            <TaskItem
+              key={index}
+              taskItem={{ ...taskItem, editedTask }}
+              index={index}
+              editingIndex={editingIndex}
+              handlers={{
+                toggleTaskDone,
+                startEditing,
+                deleteTask,
+                saveEdit,
+                handleEditChange,
+                cancelEdit,
+              }}
+            />
+          ))
+        )}
+      </Suspense>
     </div>
   );
 }
