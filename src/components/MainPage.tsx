@@ -1,8 +1,9 @@
 import "../App.css";
-import { PlusIcon, iconStyle } from "./Ui";
 import useTaskHandlers from "../hooks/useTaskHandlers";
 import { ErrorBoundary } from "react-error-boundary";
 import { lazy, Suspense } from "react";
+import { iconStyle } from "./Ui";
+import Clock from "./Clock";
 
 const TaskItem = lazy(() => import("./TaskItem"));
 
@@ -36,25 +37,27 @@ function MainPage() {
 
   return (
     <div>
-      <h1>Todo-List</h1>
+      <Clock />
+      <h1>Taskmaster 1.0</h1>
       <input
         type="text"
         value={task}
         onChange={(e) => setTask(e.target.value)}
         onKeyDown={addTask}
         style={{
-          padding: "0.2rem 0.6rem",
-          borderRadius: "0.2rem",
-          marginBottom: "2rem",
+          padding: "0.3rem",
+          borderRadius: "0.5rem",
+          marginBottom: "1rem",
         }}
         autoFocus
-        placeholder="Write a task..."
+        placeholder="Enter Task"
       />
       <Suspense fallback={<div>Loading...</div>}>
         <button style={iconStyle} onClick={addTask}>
-          <PlusIcon />
+          Add
         </button>
-        <h3>Completed Tasks: {completedTaskCount}</h3>
+        {tasks.length > 0 && <p>Total: {tasks.length}</p>}
+        {tasks.length > 0 && <p>Completed: {completedTaskCount}</p>}
         {tasks.length === 0 ? (
           <p>No tasks</p>
         ) : (
