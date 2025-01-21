@@ -1,9 +1,9 @@
 const taskContainer = {
   display: "flex",
   alignItems: "center",
-  border: "0.1rem solid grey",
-  padding: "0.5rem 0.5rem",
-  borderRadius: "0.5rem",
+  border: "0.2rem solid #1a1a1a",
+  padding: "0.5rem",
+  borderRadius: "1rem",
   marginBottom: "0.5rem",
   justifyContent: "space-between",
 };

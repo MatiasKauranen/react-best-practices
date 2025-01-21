@@ -1,5 +1,11 @@
 import React from "react";
-import { CheckboxIcon, EditIcon, TrashIcon, CheckIcon, iconStyle } from "./Ui";
+import {
+  CheckboxIcon,
+  PencilIcon,
+  TrashIcon,
+  CheckIcon,
+  iconStyle,
+} from "./Ui";
 import taskContainer from "./Ui/taskContainer";
 import { TaskItemProps } from "../types/TaskItemProps";
 
@@ -28,7 +34,10 @@ const TaskItem: React.FC<TaskItemProps> = ({
             if (e.key === "Enter") saveEdit();
             else if (e.key === "Escape") handlers.cancelEdit();
           }}
-          style={{ padding: "0.2rem 0.6rem", borderRadius: "0.2rem" }}
+          style={{
+            padding: "0.3rem",
+            borderRadius: "0.5rem",
+          }}
           autoFocus
         />
       ) : (
@@ -47,7 +56,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
               <CheckboxIcon />
             </button>
             <button onClick={() => startEditing(index)} style={iconStyle}>
-              <EditIcon />
+              <PencilIcon />
             </button>
             <button onClick={() => deleteTask(index)} style={iconStyle}>
               <TrashIcon />
