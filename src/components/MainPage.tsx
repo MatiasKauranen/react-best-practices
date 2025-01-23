@@ -4,6 +4,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { lazy, Suspense } from "react";
 import { iconStyle } from "./Ui";
 import Clock from "./Clock";
+import AddButton from "./AddButton";
 
 const TaskItem = lazy(() => import("./TaskItem"));
 
@@ -53,9 +54,7 @@ function MainPage() {
         placeholder="Enter Task"
       />
       <Suspense fallback={<div>Loading...</div>}>
-        <button style={iconStyle} onClick={addTask}>
-          Add
-        </button>
+        <AddButton onClick={addTask} />
         {tasks.length > 0 && <p>Total: {tasks.length}</p>}
         {tasks.length > 0 && <p>Completed: {completedTaskCount}</p>}
         {tasks.length === 0 ? (
