@@ -1,23 +1,11 @@
 import "../App.css";
 import useTaskHandlers from "../hooks/useTaskHandlers";
 import { ErrorBoundary } from "react-error-boundary";
-import { lazy, Suspense } from "react";
-import { iconStyle } from "./Ui";
+import { lazy, Suspense, useState, useEffect } from "react";
 import Clock from "./Clock";
 import AddButton from "./AddButton";
 
 const TaskItem = lazy(() => import("./TaskItem"));
-
-<ErrorBoundary
-  fallback={
-    <div>
-      <p>Something went wrong</p>
-      <button onClick={() => window.location.reload()}>Reload</button>
-    </div>
-  }
->
-  <MainPage />
-</ErrorBoundary>;
 
 function MainPage() {
   const {
@@ -35,6 +23,27 @@ function MainPage() {
     completedTaskCount,
     cancelEdit,
   } = useTaskHandlers();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setLoading(false);
+      } catch (err: any) {
+        setError(err);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
 
   return (
     <div>
@@ -81,4 +90,18 @@ function MainPage() {
     </div>
   );
 }
-export default MainPage;
+
+export default function App() {
+  return (
+    <ErrorBoundary
+      fallback={
+        <div>
+          <p>Something went wrong</p>
+          <button onClick={() => window.location.reload()}>Reload</button>
+        </div>
+      }
+    >
+      <MainPage />
+    </ErrorBoundary>
+  );
+}
