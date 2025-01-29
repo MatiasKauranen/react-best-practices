@@ -33,8 +33,12 @@ function MainPage() {
         setLoading(true);
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setLoading(false);
-      } catch (err: any) {
-        setError(err);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err);
+        } else {
+          setError(new Error("An unknown error occurred"));
+        }
         setLoading(false);
       }
     };
