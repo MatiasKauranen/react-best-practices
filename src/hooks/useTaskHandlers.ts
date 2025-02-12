@@ -1,46 +1,88 @@
-import { useState, useCallback, useMemo } from "react";
-import useLocalStorage from "./useLocalStorage";
+import { useState, useEffect, useCallback, useMemo } from "react";
+
+const API_URL = "http://localhost:5000/tasks";
 
 function useTaskHandlers() {
   const [task, setTask] = useState("");
-  const [tasks, setTasks] = useLocalStorage();
+  const [tasks, setTasks] = useState<
+    { id: number; text: string; done: boolean }[]
+  >([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedTask, setEditedTask] = useState<string>("");
 
+  useEffect(() => {
+    fetch(API_URL)
+      .then((res) => res.json())
+      .then(setTasks)
+      .catch((error) => console.error("Failed to fetch tasks:", error));
+  }, []);
+
   const addTask = useCallback(
-    (
+    async (
       event:
         | React.KeyboardEvent<HTMLInputElement>
         | React.MouseEvent<HTMLButtonElement>
     ) => {
       if ("key" in event && event.key !== "Enter") return;
+      if (!task.trim()) return;
 
-      if (task.trim()) {
-        const newTask = { text: task, done: false };
-        const updatedTasks = [...tasks, newTask];
-        setTasks(updatedTasks);
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: task }),
+        });
+        const newTask = await res.json();
+        setTasks((prevTasks) => [...prevTasks, newTask]);
         setTask("");
+      } catch (error) {
+        console.error("Error adding task:", error);
       }
     },
-    [task, tasks, setTasks]
+    [task]
   );
 
-  const deleteTask = useCallback(
-    (index: number) => {
-      const updatedTasks = tasks.filter((_, i) => i !== index);
-      setTasks(updatedTasks);
-    },
-    [tasks, setTasks]
-  );
+  const deleteTask = async (index: number) => {
+    try {
+      const taskId = tasks[index].id;
+      const response = await fetch(`http://localhost:5000/tasks/${taskId}`, {
+        method: "DELETE",
+      });
 
-  const toggleTaskDone = useCallback(
-    (index: number) => {
-      const updatedTasks = [...tasks];
-      updatedTasks[index].done = !updatedTasks[index].done;
-      setTasks(updatedTasks);
-    },
-    [tasks, setTasks]
-  );
+      if (!response.ok) {
+        throw new Error("Failed to delete task");
+      }
+
+      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const toggleTaskDone = async (index: number) => {
+    const updatedTask = { ...tasks[index], done: !tasks[index].done };
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/tasks/${tasks[index].id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedTask),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update task");
+      }
+
+      setTasks((prevTasks) =>
+        prevTasks.map((task, i) => (i === index ? updatedTask : task))
+      );
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
 
   const startEditing = (index: number) => {
     setEditingIndex(index);
@@ -51,16 +93,31 @@ function useTaskHandlers() {
     setEditedTask(e.target.value);
   };
 
-  const saveEdit = () => {
-    if (editedTask.trim()) {
-      const updatedTasks = [...tasks];
-      updatedTasks[editingIndex!] = {
-        ...updatedTasks[editingIndex!],
-        text: editedTask,
-      };
-      setTasks(updatedTasks);
+  const saveEdit = async () => {
+    if (editingIndex === null) return;
+    const updatedTask = { ...tasks[editingIndex], text: editedTask };
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/tasks/${tasks[editingIndex].id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedTask),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update task");
+      }
+
+      setTasks((prevTasks) =>
+        prevTasks.map((task, i) => (i === editingIndex ? updatedTask : task))
+      );
+
       setEditingIndex(null);
-      setEditedTask("");
+    } catch (error) {
+      console.error("Error updating task:", error);
     }
   };
 
